@@ -6,6 +6,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import './MapViewer.css';
 
 // Fix Leaflet icon issues
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -38,6 +39,12 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
   const mapInstance = useRef<L.Map | null>(null);
   const [currentLayer, setCurrentLayer] = useState(0);
   const [showLayerControl, setShowLayerControl] = useState(false);
+  const [layerReferences, setLayerReferences] = useState<Map<string, L.TileLayer>>(new Map());
+  const [baseLayerReferences, setBaseLayerReferences] = useState<Map<string, L.TileLayer>>(new Map());
+  const [layerVisibility, setLayerVisibility] = useState<Map<string, boolean>>(new Map());
+  const [selectedBaseLayer, setSelectedBaseLayer] = useState<string>('');
+  const [layerOpacity, setLayerOpacity] = useState<Map<string, number>>(new Map());
+
 
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
@@ -72,32 +79,53 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
       })
     };
 
+    // Store base layer references
+    const baseLayerMap = new Map<string, L.TileLayer>();
+    Object.entries(baseLayers).forEach(([name, layer]) => {
+      baseLayerMap.set(name, layer);
+    });
+    setBaseLayerReferences(baseLayerMap);
+
     // Add default base layer
     const defaultBasemap = mapData.metadata.basemap === 'dark' ? 'Dark' :
                           mapData.metadata.basemap === 'terrain' ? 'Terrain' :
                           mapData.metadata.basemap === 'roadmap' ? 'Streets' : 'Satellite';
     baseLayers[defaultBasemap].addTo(map);
+    setSelectedBaseLayer(defaultBasemap);
 
     // Add Earth Engine layers
     const eeLayers: { [key: string]: L.TileLayer } = {};
+    const layerMap = new Map<string, L.TileLayer>();
+    const visibilityMap = new Map<string, boolean>();
+    const opacityMap = new Map<string, number>();
     
     mapData.layers.forEach((layer, index) => {
+      const isVisible = true; // Make all layers visible by default
+      const initialOpacity = 0.8; // Default opacity when visible
+      console.log(`Creating EE layer: ${layer.name}, visible: ${isVisible}, tileUrl: ${layer.tileUrl}`);
+      
       const eeLayer = L.tileLayer(layer.tileUrl, {
         attribution: 'Google Earth Engine',
         maxZoom: 20,
-        opacity: 1
+        opacity: initialOpacity // Set to visible opacity
       });
       
       eeLayers[`EE: ${layer.name}`] = eeLayer;
+      layerMap.set(layer.name, eeLayer);
+      visibilityMap.set(layer.name, isVisible);
+      opacityMap.set(layer.name, initialOpacity);
+      
+      // Add to map and make visible
       eeLayer.addTo(map);
+      
+      console.log(`Added layer ${layer.name} to map, opacity: ${eeLayer.options.opacity}, visible: ${isVisible}`);
     });
     
-    // Add layer control
-    const layerControl = L.control.layers(baseLayers, eeLayers, {
-      position: 'topright',
-      collapsed: false
-    });
-    layerControl.addTo(map);
+    setLayerReferences(layerMap);
+    setLayerVisibility(visibilityMap);
+    setLayerOpacity(opacityMap);
+    
+    // Note: Using custom layer control instead of Leaflet's built-in control
 
     // Add scale control
     L.control.scale({
@@ -173,159 +201,139 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
     };
   }, [mapData]);
 
+  // Click handler to toggle layer control
+  const handleLayerControlToggle = () => {
+    setShowLayerControl(!showLayerControl);
+  };
+
   return (
     <>
       <div ref={mapContainer} className="map-container" />
       
-      {mapData.layers.length > 1 && showLayerControl && (
-        <div className="layer-switcher">
-          <h4>Layers</h4>
-          {mapData.layers.map((layer, index) => (
-            <label key={index}>
-              <input
-                type="radio"
-                name="layer"
-                checked={currentLayer === index}
-                onChange={() => {
-                  setCurrentLayer(index);
-                  // Update layer opacity
-                  if (mapInstance.current) {
-                    mapInstance.current.eachLayer((l: any) => {
-                      if (l.options && l.options.attribution === 'Google Earth Engine') {
-                        l.setOpacity(0);
-                      }
-                    });
-                    // Show selected layer
-                    // Note: This is simplified, actual implementation would track layer references
-                  }
-                }}
-              />
-              {layer.name}
-            </label>
-          ))}
+      <div className="bottom-layer-control">
+        <div className="current-layer-display">
+          <button
+            className="current-layer-btn"
+            onClick={handleLayerControlToggle}
+          >
+            <div className="current-layer-info">
+              {/* Base Layer */}
+              <div className="base-layer-item">
+                <button
+                  className="base-layer-toggle-btn"
+                  onClick={handleLayerControlToggle}
+                >
+                  <span className="base-layer-name">{selectedBaseLayer}</span>
+                </button>
+              </div>
+              
+              {/* EE Layers */}
+              <div className="visible-ee-layers">
+                {Array.from(layerVisibility.entries()).map(([layerName, isVisible]) => {
+                  const layerRef = layerReferences.get(layerName);
+                  return (
+                    <div key={layerName} className="visible-layer-item">
+                      <button
+                        className={`layer-toggle-btn ${isVisible ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (layerRef) {
+                            const newVisibility = !isVisible;
+                            const targetOpacity = newVisibility ? 1 : 0;
+                            console.log(`Toggling layer ${layerName}: ${isVisible} -> ${newVisibility}, opacity: ${targetOpacity}`);
+                            
+                            layerRef.setOpacity(targetOpacity);
+                            
+                            if (mapInstance.current) {
+                              mapInstance.current.invalidateSize();
+                            }
+                            
+                            setLayerVisibility(prev => {
+                              const newMap = new Map(prev);
+                              newMap.set(layerName, newVisibility);
+                              return newMap;
+                            });
+                          } else {
+                            console.error(`Layer reference not found for: ${layerName}`);
+                          }
+                        }}
+                      >
+                        <span className="visible-layer-name">{layerName}</span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </button>
         </div>
-      )}
 
-      <style jsx>{`
-        .map-container {
-          flex: 1;
-          width: 100%;
-          height: calc(100vh - 80px);
-          position: relative;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateX(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes flicker {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.8; }
-        }
-
-        .layer-switcher {
-          position: absolute;
-          top: 80px;
-          right: 20px;
-          background: rgba(42, 42, 42, 0.95);
-          padding: 1rem;
-          border-radius: 8px;
-          backdrop-filter: blur(10px);
-          z-index: 1001;
-          min-width: 150px;
-        }
-
-        .layer-switcher h4 {
-          margin: 0 0 0.5rem 0;
-          color: #4CAF50;
-          font-size: 1rem;
-        }
-
-        .layer-switcher label {
-          display: block;
-          padding: 0.25rem 0;
-          color: #ccc;
-          cursor: pointer;
-        }
-
-        .layer-switcher input {
-          margin-right: 0.5rem;
-        }
-
-        :global(.leaflet-control-layers) {
-          background: rgba(42, 42, 42, 0.95) !important;
-          backdrop-filter: blur(10px);
-          border: 1px solid #444;
-          border-radius: 8px;
-          color: #ccc;
-        }
-
-        :global(.leaflet-control-layers-base label),
-        :global(.leaflet-control-layers-overlays label) {
-          color: #ccc !important;
-        }
-
-        :global(.custom-controls) {
-          background: rgba(42, 42, 42, 0.95) !important;
-          backdrop-filter: blur(10px);
-          border: 1px solid #444;
-          border-radius: 8px;
-        }
-
-        :global(.control-button) {
-          display: block !important;
-          width: 30px !important;
-          height: 30px !important;
-          line-height: 30px !important;
-          text-align: center !important;
-          text-decoration: none !important;
-          color: white !important;
-          font-size: 18px !important;
-          background: transparent !important;
-          border-bottom: 1px solid #444 !important;
-        }
-
-        :global(.control-button:last-child) {
-          border-bottom: none !important;
-        }
-
-        :global(.control-button:hover) {
-          background: rgba(76, 175, 80, 0.3) !important;
-        }
-
-        :global(.leaflet-control-scale) {
-          background: rgba(42, 42, 42, 0.95) !important;
-          backdrop-filter: blur(10px);
-          border: 1px solid #444 !important;
-          border-radius: 4px;
-          color: #ccc !important;
-        }
-
-        :global(.leaflet-control-scale-line) {
-          background: transparent !important;
-          color: #ccc !important;
-          border-color: #666 !important;
-        }
-      `}</style>
+        {/* Base Layer Options - Only show when clicking base layer */}
+        {showLayerControl && (
+          <div className="hover-layer-options">
+            <div className="base-layer-grid">
+              {Array.from(baseLayerReferences.entries()).map(([name, layer]) => (
+                <div key={name} className="base-layer-option">
+                  <button
+                    className={`base-layer-btn ${selectedBaseLayer === name ? 'active' : ''}`}
+                    onClick={() => {
+                      // Store current EE layer states before switching
+                      const currentEEStates = new Map();
+                      layerReferences.forEach((eeLayer, layerName) => {
+                        const isVisible = layerVisibility.get(layerName) || false;
+                        const opacity = layerOpacity.get(layerName) || 0.8;
+                        currentEEStates.set(layerName, { isVisible, opacity });
+                      });
+                      
+                      // Remove all base layers
+                      baseLayerReferences.forEach((l) => {
+                        if ((l as any)._map) l.remove();
+                      });
+                      
+                      // Add selected base layer
+                      layer.addTo(mapInstance.current!);
+                      
+                      // Update selected layer
+                      setSelectedBaseLayer(name);
+                      
+                      // Re-add Earth Engine layers with their previous state
+                      setTimeout(() => {
+                        layerReferences.forEach((eeLayer, layerName) => {
+                          const state = currentEEStates.get(layerName);
+                          if (state) {
+                            if ((eeLayer as any)._map) {
+                              eeLayer.remove();
+                            }
+                            eeLayer.addTo(mapInstance.current!);
+                            eeLayer.setOpacity(state.isVisible ? state.opacity : 0);
+                          }
+                        });
+                        
+                        if (mapInstance.current) {
+                          mapInstance.current.invalidateSize();
+                        }
+                      }, 200);
+                    }}
+                  >
+                    <div className="base-layer-icon">
+                      {name === 'Satellite' ? (
+                        <div className="satellite-icon">🛰️</div>
+                      ) : name === 'Terrain' ? (
+                        <div className="terrain-icon">🏔️</div>
+                      ) : name === 'Streets' ? (
+                        <div className="streets-icon">🛣️</div>
+                      ) : (
+                        <div className="dark-icon">🌙</div>
+                      )}
+                    </div>
+                    <span className="base-layer-label">{name}</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 };

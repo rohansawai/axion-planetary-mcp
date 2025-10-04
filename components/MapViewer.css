@@ -1,0 +1,379 @@
+/* MapViewer Component Styles */
+
+.map-container {
+  flex: 1;
+  width: 100%;
+  height: calc(100vh - 80px);
+  position: relative;
+}
+
+/* Bottom Left Layer Control */
+.bottom-layer-control {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1001;
+}
+
+.current-layer-display {
+  display: flex;
+  align-items: center;
+}
+
+.current-layer-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 8px 12px;
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  min-width: 120px;
+  max-width: 180px;
+}
+
+.current-layer-btn:active {
+  transform: scale(0.98);
+}
+
+.current-layer-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 24px;
+}
+
+.current-layer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.base-layer-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.current-layer-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.visible-ee-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.base-layer-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  font-size: 0.7rem;
+  margin-bottom: 4px;
+}
+
+.base-layer-toggle-btn {
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: left;
+  width: 100%;
+}
+
+.base-layer-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.base-layer-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: inherit;
+  text-transform: capitalize;
+}
+
+.visible-layer-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  font-size: 0.7rem;
+}
+
+.layer-toggle-btn {
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-align: left;
+  width: 100%;
+}
+
+.layer-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.layer-toggle-btn.active {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4CAF50;
+}
+
+.visible-layer-name {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: inherit;
+}
+
+.hover-layer-options {
+  position: absolute;
+  bottom: 0;
+  left: 100%;
+  margin-left: 12px;
+  background: rgba(20, 20, 20, 0.95);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  padding: 16px;
+  min-width: 280px;
+  max-width: 320px;
+  animation: slideInFromLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Google Earth Style Base Layer Selector */
+.base-layer-selector {
+  margin-bottom: 20px;
+}
+
+.base-layer-grid {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.base-layer-option {
+  flex: 1;
+}
+
+.base-layer-btn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+.base-layer-btn:active {
+  transform: scale(0.95);
+}
+
+.base-layer-btn.active {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(69, 160, 73, 0.1));
+  border-color: #4CAF50;
+  color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+}
+
+.base-layer-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 24px;
+}
+
+.base-layer-btn.active .base-layer-icon {
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.base-layer-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Custom icons for each base layer */
+.satellite-icon {
+  background: linear-gradient(45deg, #87CEEB, #98FB98);
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.terrain-icon {
+  background: linear-gradient(45deg, #8B4513, #90EE90);
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.streets-icon {
+  background: linear-gradient(45deg, #F5F5F5, #D3D3D3);
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.dark-icon {
+  background: linear-gradient(45deg, #2C2C2C, #1A1A1A);
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+/* Data Layers Section */
+.data-layers-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.data-layers-section h4 {
+  margin: 0 0 12px 0;
+  color: #4CAF50;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.layer-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.layer-option {
+  width: 100%;
+}
+
+.layer-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.layer-btn:active {
+  transform: scale(0.95);
+}
+
+.layer-btn.active {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(69, 160, 73, 0.1));
+  border-color: #4CAF50;
+  color: #4CAF50;
+  box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.3);
+}
+
+.layer-icon {
+  font-size: 1.2rem;
+  min-width: 24px;
+  text-align: center;
+}
+
+.layer-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+/* Layer Control */
+.layer-control {
+  width: 100%;
+}
+
+/* Scrollbar styling */
+.layer-control-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.layer-control-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.layer-control-content::-webkit-scrollbar-thumb {
+  background: rgba(76, 175, 80, 0.5);
+  border-radius: 3px;
+}
+
+.layer-control-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(76, 175, 80, 0.7);
+}
