@@ -112,18 +112,6 @@ export default function MapViewerPage() {
         </div>
         
         <MapComponent mapData={mapData} />
-        
-        <div className="map-controls">
-          <div className="instructions">
-            <h3>Controls:</h3>
-            <ul>
-              <li>🖱️ Drag to pan</li>
-              <li>⚫ Scroll to zoom</li>
-              <li>⬜ Click layers button to switch layers</li>
-              <li>📱 Touch gestures supported</li>
-            </ul>
-          </div>
-        </div>
       </div>
 
       <style jsx>{`
@@ -138,13 +126,13 @@ export default function MapViewerPage() {
         }
 
         .map-header {
-          background: #2a2a2a;
-          padding: 1rem 2rem;
-          border-bottom: 1px solid #444;
+          padding: 0.75rem 1.5rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
           display: flex;
           justify-content: space-between;
           align-items: center;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+          backdrop-filter: blur(20px);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
 
         .map-header h1 {
